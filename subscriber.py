@@ -1,32 +1,32 @@
 import zmq
 import threading
 
-context = zmq.Context()
+contexto = zmq.Context()
 
-# Individual messaging (RPC)
-rpc_socket = context.socket(zmq.REP)
-rpc_socket.bind("tcp://*:5555")
+# Mensagens individuais (RPC)
+socket_rpc = contexto.socket(zmq.REP)
+socket_rpc.bind("tcp://*:5555")
 
-# Topic-based messaging (Pub-Sub)
-pub_socket = context.socket(zmq.PUB)
-pub_socket.bind("tcp://*:5556")
+# Mensagens baseadas em tópicos (Pub-Sub)
+socket_pub = contexto.socket(zmq.PUB)
+socket_pub.bind("tcp://*:5556")
 
-def handle_rpc():
+def tratar_rpc():
     while True:
-        message = rpc_socket.recv_json()
-        recipient = message["recipient"]
-        content = message["content"]
-        response = f"Message from {recipient}: {content}"
-        rpc_socket.send_string(response)
+        mensagem = socket_rpc.recv_json()
+        destinatario = mensagem["destinatario"]
+        conteudo = mensagem["conteudo"]
+        resposta = f"Mensagem de {destinatario}: {conteudo}"
+        socket_rpc.send_string(resposta)
 
-def handle_pub():
+def tratar_pub():
     while True:
-        message = pub_socket.recv_string()
-        topic, content = message.split(" ", 1)
-        pub_socket.send_string(content)
+        mensagem = socket_pub.recv_string()
+        topico, conteudo = mensagem.split(" ", 1)
+        socket_pub.send_string(conteudo)
 
-rpc_thread = threading.Thread(target=handle_rpc)
-rpc_thread.start()
+thread_rpc = threading.Thread(target=tratar_rpc)
+thread_rpc.start()
 
-pub_thread = threading.Thread(target=handle_pub)
-pub_thread.start()
+thread_pub = threading.Thread(target=tratar_pub)
+thread_pub.start()
