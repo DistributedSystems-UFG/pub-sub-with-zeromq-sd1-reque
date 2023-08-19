@@ -1,41 +1,41 @@
 import zmq
 import threading
 
-context = zmq.Context()
+contexto = zmq.Context()
 
-# Individual messaging (RPC)
-rpc_socket = context.socket(zmq.REQ)
-rpc_socket.connect("tcp://localhost:5555")
+# Mensagens individuais (RPC)
+socket_rpc = contexto.socket(zmq.REQ)
+socket_rpc.connect("tcp://localhost:5555")
 
-# Topic-based messaging (Pub-Sub)
-sub_socket = context.socket(zmq.SUB)
-sub_socket.connect("tcp://localhost:5556")
-sub_socket.setsockopt_string(zmq.SUBSCRIBE, "")
+# Mensagens baseadas em tópicos (Pub-Sub)
+socket_sub = contexto.socket(zmq.SUB)
+socket_sub.connect("tcp://localhost:5556")
+socket_sub.setsockopt_string(zmq.SUBSCRIBE, "")
 
-def individual_sender():
+def enviar_individual():
     while True:
-        recipient = input("Enter recipient username: ")
-        content = input("Enter message: ")
-        message = {"recipient": recipient, "content": content}
-        rpc_socket.send_json(message)
-        response = rpc_socket.recv_string()
-        print(response)
+        destinatario = input("Digite o nome do destinatário: ")
+        conteudo = input("Digite a mensagem: ")
+        mensagem = {"destinatario": destinatario, "conteudo": conteudo}
+        socket_rpc.send_json(mensagem)
+        resposta = socket_rpc.recv_string()
+        print(resposta)
 
-def topic_sender():
+def enviar_topico():
     while True:
-        content = input("Enter message for topic: ")
-        message = f"TOPIC {content}"
-        sub_socket.send_string(message)
+        conteudo = input("Digite a mensagem para o tópico: ")
+        mensagem = f"TÓPICO {conteudo}"
+        socket_sub.send_string(mensagem)
 
-def topic_receiver():
+def receber_topico():
     while True:
-        message = sub_socket.recv_string()
-        print(f"Topic message received: {message}")
+        mensagem = socket_sub.recv_string()
+        print(f"Mensagem do tópico recebida: {mensagem}")
 
-individual_thread = threading.Thread(target=individual_sender)
-topic_sender_thread = threading.Thread(target=topic_sender)
-topic_receiver_thread = threading.Thread(target=topic_receiver)
+thread_individual = threading.Thread(target=enviar_individual)
+thread_enviar_topico = threading.Thread(target=enviar_topico)
+thread_receber_topico = threading.Thread(target=receber_topico)
 
-individual_thread.start()
-topic_sender_thread.start()
-topic_receiver_thread.start()
+thread_individual.start()
+thread_enviar_topico.start()
+thread_receber_topico.start()
