@@ -1,12 +1,32 @@
 import zmq
-from constPS import * #-
+import threading
 
 context = zmq.Context()
-s = context.socket(zmq.SUB)          # create a subscriber socket
-p = "tcp://"+ HOST +":"+ PORT        # how and where to communicate
-s.connect(p)                         # connect to the server
-s.setsockopt_string(zmq.SUBSCRIBE, "TIME")  # subscribe to TIME messages
 
-for i in range(5):  # Five iterations
-	time = s.recv()   # receive a message
-	print (bytes.decode(time))
+# Individual messaging (RPC)
+rpc_socket = context.socket(zmq.REP)
+rpc_socket.bind("tcp://*:5555")
+
+# Topic-based messaging (Pub-Sub)
+pub_socket = context.socket(zmq.PUB)
+pub_socket.bind("tcp://*:5556")
+
+def handle_rpc():
+    while True:
+        message = rpc_socket.recv_json()
+        recipient = message["recipient"]
+        content = message["content"]
+        response = f"Message from {recipient}: {content}"
+        rpc_socket.send_string(response)
+
+def handle_pub():
+    while True:
+        message = pub_socket.recv_string()
+        topic, content = message.split(" ", 1)
+        pub_socket.send_string(content)
+
+rpc_thread = threading.Thread(target=handle_rpc)
+rpc_thread.start()
+
+pub_thread = threading.Thread(target=handle_pub)
+pub_thread.start()
